@@ -1,0 +1,139 @@
+import random
+
+def start_game():
+    # Initialize the board with predefined values
+    mat = [
+        [0, 0, 0, 0],
+        [0, 2, 0, 0],
+        [4, 0, 2, 0],
+        [8, 4, 0, 0]
+    ]
+    return mat
+
+def compress(mat):
+    new_mat = []
+    for i in range(4):
+        new_row = [num for num in mat[i] if num != 0]
+        new_row += [0] * (4 - len(new_row))  # Fill with zeros
+        new_mat.append(new_row)
+    return new_mat
+
+def merge(mat, direction):
+    if direction in ['up', 'down']:
+        # Merge for vertical movements
+        for j in range(4):  # Iterate over each column
+            for i in range(3):  # Check only up to the second to last row
+                if mat[i][j] == mat[i + 1][j] and mat[i][j] != 0:
+                    mat[i][j] *= 2  # Merge the tiles
+                    mat[i + 1][j] = 0  # Set the merged tile to zero
+    elif direction in ['left', 'right']:
+        # Merge for horizontal movements
+        for i in range(4):  # Iterate over each row
+            for j in range(3):  # Check only up to the second to last column
+                if mat[i][j] == mat[i][j + 1] and mat[i][j] != 0:
+                    mat[i][j] *= 2  # Merge the tiles
+                    mat[i][j + 1] = 0  # Set the merged tile to zero
+    return mat
+
+def reverse(mat):
+    return [row[::-1] for row in mat]
+
+def transpose(mat):
+    return [[mat[j][i] for j in range(4)] for i in range(4)]
+
+def move_up(grid):
+    transposed_grid = transpose(grid)
+    new_grid = compress(transposed_grid)
+    new_grid = merge(new_grid, 'up')
+    new_grid = compress(new_grid)
+    return transpose(new_grid)
+
+def move_down(grid):
+    transposed_grid = transpose(grid)
+    reversed_grid = reverse(transposed_grid)
+    new_grid = compress(reversed_grid)
+    new_grid = merge(new_grid, 'down')
+    new_grid = compress(new_grid)
+    return reverse(transpose(new_grid))
+
+def move_right(grid):
+    reversed_grid = reverse(grid)
+    new_grid = compress(reversed_grid)
+    new_grid = merge(new_grid, 'right')
+    new_grid = compress(new_grid)
+    return reverse(new_grid)
+
+def move_left(grid):
+    new_grid = compress(grid)
+    new_grid = merge(new_grid, 'left')
+    new_grid = compress(new_grid)
+    return new_grid
+
+def get_current_state(mat):
+    if any(2048 in row for row in mat):
+        return 'WON'
+    if any(0 in row for row in mat):
+        return 'GAME NOT OVER'
+    
+    for i in range(4):
+        for j in range(4):
+            if (i < 3 and mat[i][j] == mat[i + 1][j]) or (j < 3 and mat[i][j] == mat[i][j + 1]):
+                return 'GAME NOT OVER'
+    
+    return 'LOST'
+
+# Initialize game with predefined tiles
+mat = start_game()
+
+# Move counter
+move_count = 0
+max_moves = 10
+
+while move_count < max_moves:
+    print("\nCurrent state of the board:\n")
+    
+    for row in mat:
+        print(row)
+
+    state = get_current_state(mat)
+
+    if state == 'WON':
+        print("You won!")
+        break
+    elif state == 'LOST':
+        print("You lost!")
+        break
+
+    # Display remaining moves
+    remaining_moves = max_moves - move_count
+    print(f"Moves left: {remaining_moves}")
+
+    print()
+    
+    inputs = input("Enter your move (1 for Up, 2 for Down, 3 for Left, 4 for Right): ")
+    
+    if inputs.isdigit():
+        direction = int(inputs)
+
+        if direction == 1:
+            new_mat = move_up(mat)
+        elif direction == 2:
+            new_mat = move_down(mat)
+        elif direction == 3:
+            new_mat = move_left(mat)
+        elif direction == 4:
+            new_mat = move_right(mat)
+        else:
+            print("Invalid input! Please enter a valid number.")
+            continue
+        
+        # Check if the board changed after the move
+        if new_mat != mat:
+            mat = new_mat
+            move_count += 1
+        else:
+            print("No valid moves made. Try again.")
+
+# Check if game ended without winning
+if move_count == max_moves and state != 'WON':
+    print("\nYou lost!")
