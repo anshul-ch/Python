@@ -1,1 +1,0 @@
-r, c = random.randint(0, 3), random.randint(0, 3)
